@@ -68,3 +68,16 @@ func (s *Store) GetAllURLUsers(url string) error {
 		return nil
 	})
 }
+
+// GetAllURLs gets all the sites that have credentials stored
+func (s *Store) GetAllURLs() error {
+	return s.db.View(func(tx *bolt.Tx) error {
+		if err := tx.ForEach(func(k []byte, _ *bolt.Bucket) error {
+			fmt.Println(string(k))
+			return nil
+		}); err != nil {
+			log.Fatal(err)
+		}
+		return nil
+	})
+}

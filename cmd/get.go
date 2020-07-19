@@ -26,6 +26,7 @@ import (
 var getURL string
 var getUsername string
 var getAllUsers bool
+var getAllURLs bool
 
 // getCmd represents the get command
 var getCmd = &cobra.Command{
@@ -34,28 +35,44 @@ var getCmd = &cobra.Command{
 	Long:  `Get the password for the given URL and username`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if getAllUsers {
-			if getURL == "" {
-				fmt.Println("You must provide a URL with the all-users flag")
-			} else {
-				s := initDB()
-				err := s.GetAllURLUsers(getURL)
-				if err != nil {
-					log.Fatal(err)
-				}
-				s.Close()
-			}
-		} else {
-			if getURL == "" || getUsername == "" {
-				fmt.Println("Must include both URL and username")
+			if getAllURLs {
+				fmt.Println("You cannot use all-urls flag with the all-users flag")
 				os.Exit(1)
 			}
+			if getURL == "" {
+				fmt.Println("You must provide a URL with the all-users flag")
+				os.Exit(1)
+			}
+			s := initDB()
+			err := s.GetAllURLUsers(getURL)
+			if err != nil {
+				log.Fatal(err)
+			}
+			s.Close()
+			os.Exit(0)
+		}
 
+		if getAllURLs {
+			s := initDB()
+			err := s.GetAllURLs()
+			if err != nil {
+				log.Fatal(err)
+			}
+			s.Close()
+			os.Exit(0)
+		}
+
+		if getURL == "" || getUsername == "" {
+			fmt.Println("Must include both URL and username")
+			os.Exit(1)
+		} else {
 			s := initDB()
 			err := s.GetItem(getURL, getUsername)
 			if err != nil {
 				log.Fatal(err)
 			}
 			s.Close()
+			os.Exit(0)
 		}
 	},
 }
@@ -68,5 +85,7 @@ func init() {
 	getCmd.PersistentFlags().StringVar(&getUsername, "username", "", "the username for which to retrieve the password")
 	getCmd.MarkFlagRequired("username")
 	getCmd.PersistentFlags().BoolVar(&getAllUsers, "all-users", false, "get all users for a given URL")
-	getCmd.MarkFlagRequired("username")
+	getCmd.MarkFlagRequired("all-users")
+	getCmd.PersistentFlags().BoolVar(&getAllURLs, "all-urls", false, "get all URLs for which credentials are stored")
+	getCmd.MarkFlagRequired("all-urls")
 }
