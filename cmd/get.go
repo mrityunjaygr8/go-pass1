@@ -17,12 +17,15 @@ package cmd
 
 import (
 	"fmt"
+	"log"
+	"os"
 
 	"github.com/spf13/cobra"
 )
 
 var getURL string
 var getUsername string
+var getAllUsers bool
 
 // getCmd represents the get command
 var getCmd = &cobra.Command{
@@ -30,7 +33,30 @@ var getCmd = &cobra.Command{
 	Short: "Get the password for the given URL and username",
 	Long:  `Get the password for the given URL and username`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("URL: %s\nUsername: %s\n", getURL, getUsername)
+		if getAllUsers {
+			if getURL == "" {
+				fmt.Println("You must provide a URL with the all-users flag")
+			} else {
+				s := initDB()
+				err := s.GetAllURLUsers(getURL)
+				if err != nil {
+					log.Fatal(err)
+				}
+				s.Close()
+			}
+		} else {
+			if getURL == "" || getUsername == "" {
+				fmt.Println("Must include both URL and username")
+				os.Exit(1)
+			}
+
+			s := initDB()
+			err := s.GetItem(getURL, getUsername)
+			if err != nil {
+				log.Fatal(err)
+			}
+			s.Close()
+		}
 	},
 }
 
@@ -40,5 +66,7 @@ func init() {
 	getCmd.PersistentFlags().StringVar(&getURL, "url", "", "the URL for which to retrieve the password")
 	getCmd.MarkFlagRequired("url")
 	getCmd.PersistentFlags().StringVar(&getUsername, "username", "", "the username for which to retrieve the password")
+	getCmd.MarkFlagRequired("username")
+	getCmd.PersistentFlags().BoolVar(&getAllUsers, "all-users", false, "get all users for a given URL")
 	getCmd.MarkFlagRequired("username")
 }

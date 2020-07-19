@@ -20,8 +20,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/mrityunjaygr8/go-pass/stuff/item"
-	"github.com/mrityunjaygr8/go-pass/stuff/store"
+	"github.com/mrityunjaygr8/go-pass/stuff"
 	"github.com/spf13/cobra"
 )
 
@@ -40,19 +39,18 @@ var addCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		fmt.Printf("URL: %s\nUsername: %s\nPassword: %s\n", addURL, addUsername, addPassword)
 		s := initDB()
-		i := item.Item{URL: addURL, Username: addUsername, Password: addPassword}
+		i := stuff.Item{URL: addURL, Username: addUsername, Password: addPassword}
 		err := s.AddItem(i)
 		if err != nil {
 			log.Fatal()
 		}
-		s.CLose()
+		s.Close()
 	},
 }
 
-func initDB() store.Store {
-	s, err := store.Init()
+func initDB() stuff.Store {
+	s, err := stuff.Init()
 	if err != nil {
 		log.Fatal()
 	}
